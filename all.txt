@@ -1,0 +1,197 @@
+gael 1234
+---
+NOW WE GO TO 'localhost/admin'
+CREATE A TEST POST
+!!!slug it's our url
+---
+NOW WE NEED TO SERIALIZER WITH REST_FRAMEWORK
+WHY SERIALIZER?
+CAUSE NEED THAT OTHERS APPS READ OUR INFORMATION, AND NEED A FORMAT CORRECT = JSON
+CREATE AT APP BLOG 'serializers.py'
+#IMPORT SERIALIZER AND CLASS
+from rest_framework import serializers
+from .models import Post
+
+#CREATE A CLASS TO SERIALIZER
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model.Post
+        "#ADD THE SECTIONS TO SERIALIZER
+        fields = ('id', 'title', 'thumbnail', 'excerpt', 'content', 'slug', 'published', 'author', 'stauts')
+---
+NOW NEED TO CREATE VIEWS
+#IMPORT GET OR 404
+from django.shortcuts import render, get_object_or_404
+#WE USE APIVIEW
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+#IMPORT MODELS
+from .models import Post
+from .serializers import PostSerializer
+
+#LIST POSTS
+class BlogListView(APIView):
+    def get(self, request, *args, **kwargs):
+        # post = Post.objects.all()
+        post = Post.postobjects.all()[0:4]
+        serializer = PostSerializer(posts, many=True)
+
+        return Response(serializer.data)
+
+#SHOW POST
+class PostDetailView(APIView):
+    #WE INDENTIFICATED FOR HIS SLUG
+    def get(self, request, post_slug, *args, **kwargs):
+        post = get_object_or_404(Post, slug=post_slug)
+        serializer = PostSerializer(posts)
+
+        return Response(serializer.data)
+---
+ADD TO CORE URLS THE INCLUDE OF APP URLS
+    path('blog/', include('blog.urls', namespace='blog')),
+---
+CREATE IN APP (BLOG) URLS.PÝ AND ADD
+#IMPORT PATH AND MODELS
+from django.urls import path
+
+from .views import BlogListView, PostDetailView
+
+#PUT NAME TO APP
+app_name='blog'
+
+urlpatterns = [
+    #ADD LIST POST VIEW
+    path('posts/', BlogListView.as_view(), name='blog-list'),
+
+    #ADD POST WITH HIS SLUG
+    path('posts/<post_slug>', PostDetailView.as_view()),
+]
+---
+EDIT PROBLEMS WITH SINTAXIS
+END BACKEND
+-------------------------------------------------/
+FRONTEND
+ curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - 
+sudo apt-get install -y nodejs
+npm install -g @vue/cli
+---
+cd frontend
+vue add tailwind
+y
+full
+npm run serve
+#YOU CAN START SERVER SINCE LOCAL HOST OR NETWORK HOST
+#ON VIEW ALWAYS NEED TO CLOSE HTML SPACES 
+#ALL VIEWS APPS (HOME AND ABOUT) ARE CONNECT FOR APP.VUE, WITH HIS LINKS
+#AND TOO THE LINKS ARE IN THE NAV FOR APP.VUE
+#AT ROUTER/INDEX.JS ARE LIKE 'URLS.PY'
+---
+#TWO FORMS TO LINKEAR SINCE INDEX.JS, CHECK THE EXAMPLES :)
+#CREATE A EXAMPLE VIEW:
+IN VIEWS/ CREATE BlogView.vue
+GIVE FORMAT
+<template>
+  <div class="blog">
+    <h1>This is a Blog View</h1>
+  </div>
+</template>
+REGISTER IN APP.VUE
+    <router-link to="/blog">Blog</router-link>
+REGISTER IN INDEX.JS
+  {
+    path: '/blog',
+    name: 'blog',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/BlogView.vue')
+  }
+---
+NOW WE NEED TO SHOW OUR API
+CREATE FORMAT FOR OUR VUE APP
+<template>
+  <div class="blog">
+    <h1>This is a Blog View</h1>
+    <div v-for="posts in APIData" :key="posts.id" class="item">
+      <h3>{{ posts.title }}</h3>
+      <p>
+        {{ posts.content }}
+      </p>
+    </div>
+  </div>
+</template>
+---
+CONNECT BACKEND WITH API (NPM AXIOS)
+https://www.npmjs.com/package/vue-axios
+npm vue i axios
+---
+CREATE IN SRC/
+'AXIOS-API.JS'
+import axios from 'axios'
+
+const getAPI = axios.create({
+    baseURL: 'http://127.0.0.1:8000',
+    timeout: 1000,
+})
+
+export { getAPI }
+IN THIS FILE YOU CAN COMMUNICATE WITH A LOT APIS, YOU DECIDE:
+emplate>
+  <div class="blog">
+    <h1>This is a Blog View</h1>
+    <div v-for="posts in APIData" :key="posts.id" class="item">
+      <h3>{{ posts.title }}</h3>
+      <p>
+        {{ posts.content }}
+      </p>
+    </div>
+  </div>
+</template>
+<script>
+import { getAPI } from '../axios-api'
+
+export default {
+  name: 'Blog',
+  data(){
+    return {
+      APIData: []
+    }
+  },  
+  created () {
+    getAPI('/blog/posts/',)
+      .then(response => {
+        console.log('Post API has recieved data')
+        this.APIData = response.data
+      })
+      .catch(err => {
+        console.log(err)
+      })
+  }
+}
+</script>
+#CHECK WITH BOTH SERVERS ACTIVE
+---
+#GO TO BLOG DETAIL SINCE BLOG
+CREATE IN INDEX.JS THE URL
+  {
+    path: '/blog:slug',
+    name: 'BlogPost',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/PostDetailView.vue')
+  },
+CREATE THE LINK ON BLOG
+HERE USE ROUTER-LINK AND NOT A-HREF
+      <router-link :to="{ name: 'BlogPost',}">
+      <h3>{{ posts.title }}</h3>
+      </router-link>
+ADD PARAMETTERS
+      <router-link :to="{ name: 'BlogPost', params: { id: posts.id, title: posts.title, thumbnail: posts.thumbnail, slug: posts.slug, excerpt: posts.excerpt, content: posts.content }}">
+
+ON POST DETAIL ADD THE VIEW
+AND FOR THIS NEED THE SINTAXIS {{ $route.params.x }}
+    <h1>{{ $route.params.title }}</h1><br><p>{{ $route.params.content }}</p>
+---
+AND FINISH THE BAD FRONTEND :)
